@@ -1,3 +1,7 @@
+[features]
+default = []
+fetch = ["solana-client", "dep:serde", "dep:serde_with"]
+
 [package]
 name = "solana-attestation-service-client"
 description = "Generated client for SAS"
@@ -7,5 +11,10 @@ edition = { workspace = true }
 [dependencies]
 borsh = {workspace = true }
 solana-program = { workspace = true }
+solana-client = { workspace = true, optional = true }
+serde = { version = "1.0", features = ["derive"], optional = true }
+serde_with = { version = "3.0", optional = true }
+solana-sdk = { workspace = true }
+
 
 

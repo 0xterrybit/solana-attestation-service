@@ -27,7 +27,7 @@ import {
 } from '../instructions';
 
 export const SOLANA_ATTESTATION_SERVICE_PROGRAM_ADDRESS =
-  'DXaNS83fJzVYxaVzjeEQCp5p1txfU4fZPUcBR1X2p76o' as Address<'DXaNS83fJzVYxaVzjeEQCp5p1txfU4fZPUcBR1X2p76o'>;
+  '8EG1aghUCwkdWXWYV3UWmzWjnaLtAtjgjSGcaT3uZobU' as Address<'8EG1aghUCwkdWXWYV3UWmzWjnaLtAtjgjSGcaT3uZobU'>;
 
 export enum SolanaAttestationServiceAccount {
   Attestation,
@@ -92,7 +92,7 @@ export function identifySolanaAttestationServiceInstruction(
 }
 
 export type ParsedSolanaAttestationServiceInstruction<
-  TProgram extends string = 'DXaNS83fJzVYxaVzjeEQCp5p1txfU4fZPUcBR1X2p76o',
+  TProgram extends string = '8EG1aghUCwkdWXWYV3UWmzWjnaLtAtjgjSGcaT3uZobU',
 > =
   | ({
       instructionType: SolanaAttestationServiceInstruction.CreateCredential;

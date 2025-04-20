@@ -5,10 +5,11 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-pub(crate) mod r#attestation;
-pub(crate) mod r#credential;
-pub(crate) mod r#schema;
+  pub(crate) mod r#attestation;
+  pub(crate) mod r#credential;
+  pub(crate) mod r#schema;
 
-pub use self::r#attestation::*;
-pub use self::r#credential::*;
-pub use self::r#schema::*;
+  pub use self::r#attestation::*;
+  pub use self::r#credential::*;
+  pub use self::r#schema::*;
+

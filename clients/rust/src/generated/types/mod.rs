@@ -5,6 +5,7 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-pub(crate) mod r#close_attestation_event;
+  pub(crate) mod r#close_attestation_event;
 
-pub use self::r#close_attestation_event::*;
+  pub use self::r#close_attestation_event::*;
+
