@@ -14,13 +14,13 @@ use solana_sdk::{
 
 use crate::*;
 
-pub fn process_create_attestation(args: &Args, sub_args: &CreateAttestationArgs) {
+pub fn process_create_attestation(args: &Args, sub_args: &CreateAttestationArgs) -> Result<()> {
 
     let client = args.get_client();
     let payer = args.get_keypair(); 
     let authority = &payer;
-    let recipient = &payer;
-    
+    // let recipient = &sub_args.recipient;
+    let recipient = Pubkey::from_str(&sub_args.recipient)?;
     // 程序 ID
     let program_id = args.get_program_id();
 
@@ -28,19 +28,23 @@ pub fn process_create_attestation(args: &Args, sub_args: &CreateAttestationArgs)
 
     let (credential_pda, _) = get_credential_pda(&program_id, &authority.pubkey(), credential_name);
 
-    // let schema_name = "Jurisdiction";
     let schema_name =  &sub_args.schema_name; 
     let (schema_pda, _) = get_schema_pda(&program_id, &credential_pda, schema_name);
 
     let attestation_data = sub_args.attestation_data.clone();
-    println!("Attestation Data: {:?}", attestation_data);
     // 创建唯一的 nonce
-    let nonce = Pubkey::from_str("1111111QLbz7JHiBTspS962RLKV8GndWFwiEaqKM").expect("Invalid nonce value"); // Pubkey::new_unique();
+    // let nonce = Pubkey::from_str("1111111QLbz7JHiBTspS962RLKV8GndWFwiEaqKM").expect("Invalid nonce value"); // Pubkey::new_unique();
     println!("Credential PDA: {}", credential_pda);
     println!("Schema PDA: {}", schema_pda);
-    println!("Nonce: {}", nonce);
+    // println!("Nonce: {}", nonce);
     
-    let (attestation_pda, _) = get_attestation_pda(&program_id, &credential_pda, &schema_pda, &authority.pubkey(), &nonce);
+    let (attestation_pda, _) = get_attestation_pda(
+        &program_id, 
+        &credential_pda, 
+        &schema_pda, 
+        &authority.pubkey(), 
+        &recipient
+    );
     println!("Attestation PDA: {}", attestation_pda);
 
     // 设置过期时间 (当前时间 + 1 小时，以秒为单位)
@@ -55,7 +59,7 @@ pub fn process_create_attestation(args: &Args, sub_args: &CreateAttestationArgs)
         .system_program(system_program::ID)
         .data(attestation_data.clone())
         .expiry(expiry)
-        .nonce(nonce)
+        .nonce(recipient)
         .instruction();
 
      // 获取最新的区块哈希
@@ -81,6 +85,7 @@ pub fn process_create_attestation(args: &Args, sub_args: &CreateAttestationArgs)
     assert_eq!(attestation.schema, schema_pda);
     assert_eq!(attestation.signer, authority.pubkey());
     assert_eq!(attestation.expiry, expiry);
-    assert_eq!(attestation.nonce, nonce);
+    assert_eq!(attestation.nonce, recipient);
 
+    Ok(())
 }

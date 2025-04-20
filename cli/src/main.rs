@@ -12,7 +12,7 @@ use solana_attestation_service_client::programs::SOLANA_ATTESTATION_SERVICE_ID;
 use dotenv::dotenv;
 pub mod instructions;
 use instructions::*;
-
+use std::str::FromStr;
 
 pub const CREDENTIAL_NAME: &str = "rns_credential_1";
 pub const SCHEMA_NAME: &str = "jurisdiction_3";
@@ -56,6 +56,17 @@ struct Jurisdiction {
     recipient: String,
     jurisdiction: String,
 }
+
+impl Jurisdiction {
+    // 添加序列化方法
+    fn serialize_to_vec(&self) -> Vec<u8> {
+        let mut attestation_data = Vec::new();
+        self.serialize(&mut attestation_data)
+            .expect("序列化失败");
+        attestation_data
+    }
+}
+
 
 // AgeOver18:bool
 // AgeOver21:bool
@@ -146,6 +157,9 @@ pub struct CreateAttestationArgs {
     #[clap(long, env, default_value = SCHEMA_NAME )]
     schema_name: String,
     
+    #[clap(long, env )]
+    recipient: String,
+
     #[clap(long, env)]
     attestation_data: Vec<u8>,
 }
@@ -219,23 +233,25 @@ async fn main() -> Result<()> {
         }
         Commands::CreateAttestation(sub_args) => {
             
-            println!("recipient:  {:?}", args.get_keypair().pubkey().to_string());
-             
+            let recipient = sub_args.recipient.clone(); 
+            // Pubkey::from_str("49TFFiQk2m9yizbfB4hxdGfFXQGkhoaRWAadXEbJ5wvN").expect("Invalid nonce value"); // Pubkey::new_unique();
+    
             let data = Jurisdiction {
                 jurisdiction: "china".to_string(),
-                recipient: "49TFFiQk2m9yizbfB4hxdGfFXQGkhoaRWAadXEbJ5wvN".to_string()//args.get_keypair().pubkey().to_string()
+                recipient: recipient.to_string()
             };
-        
-            let mut attestation_data = Vec::new();
-            data
-                .serialize(&mut attestation_data)
-                .unwrap();
-            println!("attestation_data: {:?}", attestation_data);
+            
+            let attestation_data = data.serialize_to_vec();
+            // let mut attestation_data = Vec::new();
+            // data
+            //     .serialize(&mut attestation_data)
+            //     .unwrap();
  
             let new_args = CreateAttestationArgs {
                 credential_name: sub_args.credential_name.clone(),
                 schema_name: sub_args.schema_name.clone(),
                 attestation_data: attestation_data.clone(),
+                recipient: recipient
             };
 
             let _ = process_create_attestation(&args, &new_args);
