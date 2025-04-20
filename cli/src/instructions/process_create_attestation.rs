@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
 use solana_attestation_service_client::{
     accounts::Attestation,
     instructions::CreateAttestationBuilder

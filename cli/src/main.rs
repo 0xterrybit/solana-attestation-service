@@ -5,20 +5,16 @@ use solana_attestation_service_macros::SchemaStructSerialize;
 use solana_sdk::{
     commitment_config::CommitmentConfig,
     pubkey::Pubkey,
-    signature::{read_keypair_file, Keypair}, signer::Signer
+    signature::{read_keypair_file, Keypair}
 };
 use solana_client::rpc_client::RpcClient;
 use solana_attestation_service_client::programs::SOLANA_ATTESTATION_SERVICE_ID;
 use dotenv::dotenv;
 pub mod instructions;
 use instructions::*;
-use std::str::FromStr;
 
 pub const CREDENTIAL_NAME: &str = "rns_credential_1";
 pub const SCHEMA_NAME: &str = "jurisdiction_3";
-// pub const SCHEMA_VERSION: u32 = 1;
-// pub const CREDENTIAL_VERSION: u32 = 1;
-// pub const ATTESSTATION_NAME: &str = "jurisdiction_2";
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 struct AgeOver18Data {
@@ -44,13 +40,6 @@ struct BirthYear {
     recipient: Pubkey,
 }
 
-
-// #[derive(BorshSerialize, SchemaStructSerialize)]
-// struct TestData {
-//     name: String,
-//     location: u8,
-// }
-
 #[derive(BorshSerialize, BorshDeserialize, SchemaStructSerialize, Debug)]
 struct Jurisdiction {
     recipient: String,
@@ -67,22 +56,11 @@ impl Jurisdiction {
     }
 }
 
-
-// AgeOver18:bool
-// AgeOver21:bool
-// Gender:M/F(男/女)
-// Birth Year: 1980--2010
-// Jurisdiction: String, China/Palau/USA
-
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 pub struct Args {
     #[clap(subcommand)]
     pub command: Commands,
-    
-    // /// Payer keypair
-    // #[clap(long, env, default_value_t = dotenv_default("KEYPAIR_PATH"))]
-    // pub keypair_path: String,
 
     /// RPC url
     #[clap(long, env, default_value_t = dotenv_default("RPC_URL"))]
@@ -234,7 +212,6 @@ async fn main() -> Result<()> {
         Commands::CreateAttestation(sub_args) => {
             
             let recipient = sub_args.recipient.clone(); 
-            // Pubkey::from_str("49TFFiQk2m9yizbfB4hxdGfFXQGkhoaRWAadXEbJ5wvN").expect("Invalid nonce value"); // Pubkey::new_unique();
     
             let data = Jurisdiction {
                 jurisdiction: "china".to_string(),
@@ -242,10 +219,6 @@ async fn main() -> Result<()> {
             };
             
             let attestation_data = data.serialize_to_vec();
-            // let mut attestation_data = Vec::new();
-            // data
-            //     .serialize(&mut attestation_data)
-            //     .unwrap();
  
             let new_args = CreateAttestationArgs {
                 credential_name: sub_args.credential_name.clone(),

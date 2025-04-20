@@ -1,46 +1,16 @@
 use anyhow::Result;
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
 
-use solana_attestation_service_client::{
-    accounts::{
-        fetch_all_attestation, 
-        fetch_all_credential, 
-        fetch_all_maybe_attestation, 
-        fetch_all_schema, 
-        fetch_credential, 
-        fetch_maybe_attestation, 
-        fetch_maybe_credential, 
-        Credential
-    },
-    instructions::{
-        CreateAttestationBuilder, 
-        CreateCredentialBuilder, 
-        CreateSchemaBuilder,
-    }, 
-    programs::SOLANA_ATTESTATION_SERVICE_ID
+use solana_attestation_service_client::accounts::{
+    fetch_all_attestation, 
+    fetch_all_credential, 
+    fetch_all_schema, 
 };
 use solana_sdk::{
     pubkey::Pubkey,
-    signature::{
-        read_keypair_file, 
-        Keypair, 
-        Signer
-    },
-    system_program,
-    transaction::Transaction,
+    signature::Signer
 };
-use solana_account_decoder_client_types::{UiDataSliceConfig, UiAccountEncoding};
-use solana_client::{
-    rpc_config::{
-        RpcProgramAccountsConfig,
-        RpcAccountInfoConfig,
-    },
-    rpc_client::RpcClient,
-    rpc_filter::{
-        RpcFilterType,
-        Memcmp,
-    }
-};
+use solana_client::rpc_client::RpcClient;
 use crate::*;
 
 pub fn process_query(args: &Args, sub_args: &QueryArgs) -> Result<()> {

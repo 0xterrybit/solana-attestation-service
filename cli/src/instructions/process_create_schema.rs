@@ -1,21 +1,6 @@
-use anyhow::Result;
-use borsh::{BorshDeserialize, BorshSerialize};
-use solana_attestation_service_client::{
-    instructions::{
-        CreateAttestationBuilder, 
-        CreateCredentialBuilder, 
-        CreateSchemaBuilder,
-    },
-    programs::SOLANA_ATTESTATION_SERVICE_ID,
-};
-// use solana_attestation_service_macros::SchemaStructSerialize;
+use solana_attestation_service_client::instructions::CreateSchemaBuilder;
 use solana_sdk::{
-    pubkey::Pubkey,
-    signature::{
-        read_keypair_file, 
-        Keypair, 
-        Signer
-    },
+    signature::Signer,
     system_program,
     transaction::Transaction,
 };

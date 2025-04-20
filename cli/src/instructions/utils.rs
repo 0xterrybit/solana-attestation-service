@@ -1,8 +1,6 @@
 use solana_program::pubkey::Pubkey;
 use anyhow::Result;
-use borsh::{BorshDeserialize, BorshSerialize};
 use solana_sdk::commitment_config::CommitmentConfig;
-
 use solana_account_decoder_client_types::{UiDataSliceConfig, UiAccountEncoding};
 use solana_client::{
     rpc_config::{
