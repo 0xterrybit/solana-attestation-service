@@ -70,7 +70,6 @@ solana program \
 
 
 
-rpc_url: https://solana-devnet.g.alchemy.com/v2/raUQZnASib5C8Yku7AuhmhV_-PFWKtNM
 request program_id: D5PPvGRyK6ii3zjUn1zsuetjZbt6tzqL7VkhNiV4UDsJ
 request authority: A6WcyjnyU4nBD66tKxzg35bYCkeNqF4MCtQr7pwreVAv
 request credential_name: rns_credential_1
@@ -78,7 +77,6 @@ request schema_name: jurisdiction_3
 request query_type: Attestation
 
 
-rpc_url: https://solana-devnet.g.alchemy.com/v2/raUQZnASib5C8Yku7AuhmhV_-PFWKtNM
 request program_id: D5PPvGRyK6ii3zjUn1zsuetjZbt6tzqL7VkhNiV4UDsJ
 request authority: A6WcyjnyU4nBD66tKxzg35bYCkeNqF4MCtQr7pwreVAv
 request credential_name: rns_credential_1
@@ -92,10 +90,4 @@ Schema PDA: Bi6dbk7yAQYtumf7jDzZkHYa8nJFTLZffSSWcWaJdDqo
 Credential PDA: E4ccYoQdJZhypRPVf1YD3mrLH4NKN9iJqYanf6jKtcvD
 Schema PDA: Bi6dbk7yAQYtumf7jDzZkHYa8nJFTLZffSSWcWaJdDqo
 
-
-
-1. rader 
-    加了手续费地址的白名单限制
-
-2. Grant 
-
+ 
