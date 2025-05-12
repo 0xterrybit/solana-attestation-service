@@ -16,7 +16,7 @@ pub fn process_create_credential(args: &Args, sub_args: &CreateCredentialArgs) {
     let client = args.get_client();
     let payer = args.get_keypair(); 
     let authority = &payer;
-    let program_id = args.get_program_id();
+    let program_id = args.program_id;
 
     // 1. 创建 Credential
     let credential_name =  &sub_args.credential_name; 

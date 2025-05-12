@@ -1,0 +1,7 @@
+[
+    {"name": "age_over18", "type": "boolean"},
+    {"name": "age_over21", "type": "boolean"},
+    {"name": "gender", "type": "boolean"},
+    {"name": "birth_year", "type": "number"},
+    {"name": "jurisdiction", "type": "string"}
+]

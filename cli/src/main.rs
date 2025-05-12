@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use anyhow::Result;
 use borsh::{BorshDeserialize, BorshSerialize};
 use clap::{Parser, Subcommand};
@@ -8,52 +10,36 @@ use solana_sdk::{
     signature::{read_keypair_file, Keypair}
 };
 use solana_client::rpc_client::RpcClient;
-use solana_attestation_service_client::programs::SOLANA_ATTESTATION_SERVICE_ID;
 use dotenv::dotenv;
 pub mod instructions;
 use instructions::*;
 
-pub const CREDENTIAL_NAME: &str = "rns_credential_1";
-pub const SCHEMA_NAME: &str = "jurisdiction_3";
+pub const CREDENTIAL_NAME: &str = "RNS_CREDENTIAL";
+pub const SCHEMA_NAME: &str = "jurisdiction";
 
-#[derive(BorshSerialize, BorshDeserialize, Debug)]
-struct AgeOver18Data {
+#[derive(BorshSerialize, BorshDeserialize, SchemaStructSerialize, Debug)]
+struct AgeOver18 {
     age_over18: bool,
-    recipient: Pubkey,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug)]
-struct AgeOver21Data {
+#[derive(BorshSerialize, BorshDeserialize, SchemaStructSerialize, Debug)]
+struct AgeOver21 {
     age_over21: bool,
-    recipient: Pubkey,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug)]
-struct GenderData {
+#[derive(BorshSerialize, BorshDeserialize, SchemaStructSerialize, Debug)]
+struct Gender {
     gender: bool,
-    recipient: Pubkey,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug)]
+#[derive(BorshSerialize, BorshDeserialize, SchemaStructSerialize, Debug)]
 struct BirthYear {
     birth_year: u32,
-    recipient: Pubkey,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, SchemaStructSerialize, Debug)]
 struct Jurisdiction {
-    recipient: String,
     jurisdiction: String,
-}
-
-impl Jurisdiction {
-    // 添加序列化方法
-    fn serialize_to_vec(&self) -> Vec<u8> {
-        let mut attestation_data = Vec::new();
-        self.serialize(&mut attestation_data)
-            .expect("序列化失败");
-        attestation_data
-    }
 }
 
 #[derive(Parser, Debug)]
@@ -67,7 +53,7 @@ pub struct Args {
     pub rpc_url: String,
 
     /// Program id
-    #[clap(long, env, default_value_t = Pubkey::from(SOLANA_ATTESTATION_SERVICE_ID))]
+    #[clap(long, env, default_value_t = Pubkey::from_str_const(&dotenv_default("PROGRAM_ID")))]
     pub program_id: Pubkey,
 
     /// Priority fee
@@ -88,21 +74,26 @@ impl Args {
         RpcClient::new_with_commitment(self.rpc_url.clone(), commitment)
     }
 
+    // 后端权威签名者
     fn get_keypair(&self) -> Keypair {
         let keypair_path = dotenv_default("KEYPAIR_PATH");
         let keypair = read_keypair_file(keypair_path).unwrap();
         keypair
     }
 
-    fn get_program_id(&self) -> Pubkey {
-        let program_id = Pubkey::from(SOLANA_ATTESTATION_SERVICE_ID);
-        program_id
+    // 前端用户
+    fn get_payer_keypair(&self) -> Keypair {
+        let keypair_path = dotenv_default("PAYER_KEYPAIR_PATH");
+        let keypair = read_keypair_file(keypair_path).unwrap();
+        keypair
     }
+    
 }
 
 // CreateCredential subcommand args
 #[derive(Parser, Debug)]
 pub struct CreateCredentialArgs {
+    /// Specify the credential name to use, ex: RNS_CREDENTIAL
     #[clap(long, env, default_value = CREDENTIAL_NAME )]
     credential_name: String,
 }
@@ -111,45 +102,151 @@ pub struct CreateCredentialArgs {
 #[derive(Parser, Debug)]
 pub struct CreateSchemaArgs {
 
-    #[clap(long, env, default_value = CREDENTIAL_NAME )]
+    /// Specify the credential name to use, ex: RNS_CREDENTIAL
+    #[clap(long, default_value = CREDENTIAL_NAME )]
     credential_name: String,
 
-    #[clap(long, env, default_value = SCHEMA_NAME )]
+    /// Specify the schema type to use, ex: jurisdiction, age_over18, age_over21, birth_year, gender
+    #[clap(long, default_value = "jurisdiction")]
+    schema_type: SchemaType,
+
+    /// Specify the schema name to use, ex: jurisdiction_schema_name
+    #[clap(long, default_value = SCHEMA_NAME )]
     schema_name: String,
 
-    #[clap(long, env, default_value = "description" )]
-    description: String,
-    #[clap(long, env)]
-    schema_layout: Vec<u8>,
-    #[clap(long, env)]
-    field_names: Vec<String>,
+    /// Specify the schema name to use, ex: jurisdiction
+    #[clap(long, default_value = "jurisdiction_schema_description" )]
+    description: String
 }
 
 // CreateAttestation subcommand args
 #[derive(Parser, Debug)]
 pub struct CreateAttestationArgs {
-
-    #[clap(long, env, default_value = CREDENTIAL_NAME )]
+    
+    /// Specify the credential name to use, ex: RNS_CREDENTIAL
+    #[clap(long, default_value = CREDENTIAL_NAME )]
     credential_name: String,
 
-    #[clap(long, env, default_value = SCHEMA_NAME )]
+    /// Specify the schema name to use, ex: jurisdiction
+    #[clap(long, default_value = SCHEMA_NAME )]
     schema_name: String,
     
-    #[clap(long, env )]
+    /// Specify the recipient to use, ex: A6WcyjnyU4nBD66tKxzg35bYCkeNqF4MCtQr7pwreVAv
+    #[clap(long)]
     recipient: String,
 
-    #[clap(long, env)]
-    attestation_data: Vec<u8>,
+    /// Specify the schema type to use, ex: jurisdiction, age_over18, age_over21, birth_year, gender
+    #[clap(long, default_value = "jurisdiction")]
+    schema_type: SchemaType,
+
+     /// Specify the birth_year to use, ex: 2000
+     #[clap(long)]
+     birth_year: u32,
 }
+
+
+// CreateAttestation subcommand args
+#[derive(Parser, Debug)]
+pub struct CreateAttestationInput {
+    
+    /// Specify the credential name to use, ex: RNS_CREDENTIAL
+    #[clap(long, default_value = CREDENTIAL_NAME )]
+    credential_name: String,
+
+    /// Specify the schema name to use, ex: jurisdiction
+    #[clap(long, default_value = SCHEMA_NAME )]
+    schema_name: String,
+    
+    /// Specify the recipient to use, ex: A6WcyjnyU4nBD66tKxzg35bYCkeNqF4MCtQr7pwreVAv
+    #[clap(long)]
+    recipient: String,
+
+    // /// Specify the schema type to use, ex: jurisdiction, age_over18, age_over21, birth_year, gender
+    // #[clap(long, default_value = "jurisdiction")]
+    // schema_type: SchemaType,
+
+    /// Specify the attestation_data to use
+    #[clap(long)]
+    attestation_data: Vec<u8>,
+
+    // /// Specify the birth_year to use, ex: 2000
+    // #[clap(long)]
+    // birth_year: Option<u32>,
+
+    // /// Specify the gender to use, ex: true
+    // #[clap(long)]
+    // gender: Option<bool>,
+}
+
+// CreateRequest subcommand args
+#[derive(Parser, Debug)]
+pub struct CreateRequestArgs {
+    
+    /// Specify the credential name to use, ex: RNS_CREDENTIAL
+    #[clap(long, default_value = CREDENTIAL_NAME )]
+    credential_name: String,
+
+    /// Specify the schema name to use, ex: jurisdiction
+    #[clap(long, default_value = SCHEMA_NAME )]
+    schema_name: String,
+    
+    /// Specify the recipient to use, ex: A6WcyjnyU4nBD66tKxzg35bYCkeNqF4MCtQr7pwreVAv
+    #[clap(long)]
+    recipient: String,
+
+    /// Specify the schema type to use, ex: jurisdiction, age_over18, age_over21, birth_year, gender
+    #[clap(long, default_value = "jurisdiction")]
+    schema_type: SchemaType,
+
+    /// Specify the birth_year to use, ex: 2000
+    #[clap(long)]
+    birth_year: Option<u32>,
+
+    /// Specify the gender to use, ex: true
+    #[clap(long)]
+    gender: Option<bool>,
+
+}
+
+// CreateRequest subcommand args
+#[derive(Parser, Debug)]
+pub struct CreateRequestInput {
+    
+    /// Specify the credential name to use, ex: RNS_CREDENTIAL
+    #[clap(long, default_value = CREDENTIAL_NAME )]
+    credential_name: String,
+
+    /// Specify the schema name to use, ex: jurisdiction
+    #[clap(long, default_value = SCHEMA_NAME )]
+    schema_name: String,
+    
+    /// Specify the recipient to use, ex: A6WcyjnyU4nBD66tKxzg35bYCkeNqF4MCtQr7pwreVAv
+    #[clap(long)]
+    recipient: String,
+
+    #[clap(long)]
+    attestation_data: Vec<u8>,
+
+    // /// Specify the birth_year to use, ex: 2000
+    // #[clap(long)]
+    // birth_year: Option<u32>,
+
+    // /// Specify the gender to use, ex: true
+    // #[clap(long)]
+    // gender: Option<bool>,
+}
+
+
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum QueryType {
     Credential,
     Schema,
     Attestation,
+    Request
 }
 
-impl std::str::FromStr for QueryType {
+impl FromStr for QueryType {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -162,16 +259,42 @@ impl std::str::FromStr for QueryType {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum SchemaType {
+    AgeOver18,
+    AgeOver21,
+    Gender,
+    Jurisdiction,
+    BirthYear,
+}
+
+impl FromStr for SchemaType {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "age_over18" => Ok(SchemaType::AgeOver18),
+            "age_over21" => Ok(SchemaType::AgeOver21),
+            "gender" => Ok(SchemaType::Gender),
+            "jurisdiction" => Ok(SchemaType::Jurisdiction),
+            "birth_year" => Ok(SchemaType::BirthYear),
+            _ => Err(format!("未知的Schema类型: {}", s)),
+        }
+    }
+}
+
 // Query subcommand args
 #[derive(Parser, Debug)]
 pub struct QueryArgs {
-    #[clap(long, env, default_value = CREDENTIAL_NAME )]
+    /// Specify the credential name to use, ex: RNS_CREDENTIAL
+    #[clap(long, default_value = CREDENTIAL_NAME )]
     credential_name: String,
 
-    #[clap(long, env, default_value = SCHEMA_NAME )]
+    /// Specify the schema name to use, ex: jurisdiction
+    #[clap(long, default_value = SCHEMA_NAME )]
     schema_name: String,
 
-    #[clap(long, env, default_value = "attestation")]
+    /// Specify the query type to use, ex: attestation, schema, credential
+    #[clap(long, default_value = "attestation")]
     query_type: QueryType,
 }
 
@@ -181,6 +304,7 @@ pub enum Commands {
     CreateCredential(CreateCredentialArgs),
     CreateSchema(CreateSchemaArgs),
     CreateAttestation(CreateAttestationArgs),
+    CreateRequest(CreateRequestArgs),
     Query(QueryArgs),
 }
 
@@ -196,31 +320,55 @@ async fn main() -> Result<()> {
         }
         Commands::CreateSchema(sub_args) => {
 
-            let schema_layout = Jurisdiction::get_serialized_representation();
-            println!("schema_layout: {:?}", schema_layout);
-            let field_names = vec!["recipient".into(), "jurisdiction".into()];
-
             let new_args = CreateSchemaArgs {
-                schema_layout,
-                field_names,
                 credential_name: sub_args.credential_name.clone(),
+                schema_type: sub_args.schema_type.clone(),
                 schema_name: sub_args.schema_name.clone(),
-                description: sub_args.description.clone()
+                description: sub_args.description.clone(),
             };
+
             let _ = process_create_schema(&args, &new_args);
         }
         Commands::CreateAttestation(sub_args) => {
             
             let recipient = sub_args.recipient.clone(); 
-    
-            let data = Jurisdiction {
-                jurisdiction: "china".to_string(),
-                recipient: recipient.to_string()
-            };
             
-            let attestation_data = data.serialize_to_vec();
- 
-            let new_args = CreateAttestationArgs {
+            let mut attestation_data = Vec::new();
+            let schema_type = &sub_args.schema_type;
+            match schema_type {
+                SchemaType::AgeOver18 => {
+                    let data = AgeOver18 {
+                        age_over18: true
+                    };
+                    data.serialize(&mut attestation_data).expect("序列化失败");
+                },
+                SchemaType::AgeOver21 => {
+                    let data = AgeOver21 {
+                        age_over21: true
+                    };
+                    data.serialize(&mut attestation_data).expect("序列化失败");
+                },
+                SchemaType::Jurisdiction => {
+                    let data = Jurisdiction {
+                        jurisdiction: "china".to_string(),
+                    };
+                    data.serialize(&mut attestation_data).expect("序列化失败");
+                },
+                SchemaType::Gender => {
+                    let data = Gender {
+                        gender: true
+                    };
+                    data.serialize(&mut attestation_data).expect("序列化失败");
+                },
+                SchemaType::BirthYear => {
+                    let data = BirthYear{
+                        birth_year: 2000
+                    };
+                    data.serialize(&mut attestation_data).expect("序列化失败");
+                }
+            }
+
+            let new_args = CreateAttestationInput {
                 credential_name: sub_args.credential_name.clone(),
                 schema_name: sub_args.schema_name.clone(),
                 attestation_data: attestation_data.clone(),
@@ -229,9 +377,60 @@ async fn main() -> Result<()> {
 
             let _ = process_create_attestation(&args, &new_args);
         }
+        Commands::CreateRequest(sub_args) => {
+            
+            let recipient = sub_args.recipient.clone(); 
+            
+            let mut attestation_data = Vec::new();
+
+            let schema_type = &sub_args.schema_type;
+            match schema_type {
+                SchemaType::AgeOver18 => {
+                    let data = AgeOver18 {
+                        age_over18: true
+                    };
+                    data.serialize(&mut attestation_data).expect("序列化失败");
+                },
+                SchemaType::AgeOver21 => {
+                    let data = AgeOver21 {
+                        age_over21: true
+                    };
+                    data.serialize(&mut attestation_data).expect("序列化失败");
+                },
+                SchemaType::Jurisdiction => {
+                    let data = Jurisdiction {
+                        jurisdiction: "china".to_string(),
+                    };
+                    data.serialize(&mut attestation_data).expect("序列化失败");
+                },
+                SchemaType::Gender => {
+                    let data = Gender {
+                        gender: true
+                    };
+                    data.serialize(&mut attestation_data).expect("序列化失败");
+                },
+                SchemaType::BirthYear => {
+                    let data = BirthYear{
+                        birth_year: 2000
+                    };
+                    data.serialize(&mut attestation_data).expect("序列化失败");
+                }
+            }
+            
+            let sub_input = CreateRequestInput {
+                credential_name: sub_args.credential_name.clone(),
+                schema_name: sub_args.schema_name.clone(),
+                attestation_data: attestation_data.clone(),
+                recipient: recipient
+            };
+
+            let _ = process_create_request(&args, &sub_input);
+        }
+        
         Commands::Query(sub_args) => {
             let _ = process_query(&args, sub_args);
         }
+        
     }
 
     Ok(())

@@ -10,6 +10,7 @@ pub enum AttestationAccountDiscriminators {
     CredentialDiscriminator = 0,
     SchemaDiscriminator = 1,
     AttestationDiscriminator = 2,
+    RequestDiscriminator = 11,
 }
 
 pub trait AccountSerialize: Discriminator {

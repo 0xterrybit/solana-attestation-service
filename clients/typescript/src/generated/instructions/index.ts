@@ -13,6 +13,7 @@ export * from './changeSchemaVersion';
 export * from './closeAttestation';
 export * from './createAttestation';
 export * from './createCredential';
+export * from './createRequest';
 export * from './createSchema';
 export * from './createTokenizedAttestation';
 export * from './emitEvent';

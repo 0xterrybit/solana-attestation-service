@@ -20,6 +20,7 @@ import {
   type ParsedCloseAttestationInstruction,
   type ParsedCreateAttestationInstruction,
   type ParsedCreateCredentialInstruction,
+  type ParsedCreateRequestInstruction,
   type ParsedCreateSchemaInstruction,
   type ParsedCreateTokenizedAttestationInstruction,
   type ParsedEmitEventInstruction,
@@ -27,11 +28,12 @@ import {
 } from '../instructions';
 
 export const SOLANA_ATTESTATION_SERVICE_PROGRAM_ADDRESS =
-  '8EG1aghUCwkdWXWYV3UWmzWjnaLtAtjgjSGcaT3uZobU' as Address<'8EG1aghUCwkdWXWYV3UWmzWjnaLtAtjgjSGcaT3uZobU'>;
+  'D5PPvGRyK6ii3zjUn1zsuetjZbt6tzqL7VkhNiV4UDsJ' as Address<'D5PPvGRyK6ii3zjUn1zsuetjZbt6tzqL7VkhNiV4UDsJ'>;
 
 export enum SolanaAttestationServiceAccount {
   Attestation,
   Credential,
+  Request,
   Schema,
 }
 
@@ -47,6 +49,7 @@ export enum SolanaAttestationServiceInstruction {
   EmitEvent,
   TokenizeSchema,
   CreateTokenizedAttestation,
+  CreateRequest,
 }
 
 export function identifySolanaAttestationServiceInstruction(
@@ -86,13 +89,16 @@ export function identifySolanaAttestationServiceInstruction(
   if (containsBytes(data, getU8Encoder().encode(10), 0)) {
     return SolanaAttestationServiceInstruction.CreateTokenizedAttestation;
   }
+  if (containsBytes(data, getU8Encoder().encode(11), 0)) {
+    return SolanaAttestationServiceInstruction.CreateRequest;
+  }
   throw new Error(
     'The provided instruction could not be identified as a solanaAttestationService instruction.'
   );
 }
 
 export type ParsedSolanaAttestationServiceInstruction<
-  TProgram extends string = '8EG1aghUCwkdWXWYV3UWmzWjnaLtAtjgjSGcaT3uZobU',
+  TProgram extends string = 'D5PPvGRyK6ii3zjUn1zsuetjZbt6tzqL7VkhNiV4UDsJ',
 > =
   | ({
       instructionType: SolanaAttestationServiceInstruction.CreateCredential;
@@ -126,4 +132,7 @@ export type ParsedSolanaAttestationServiceInstruction<
     } & ParsedTokenizeSchemaInstruction<TProgram>)
   | ({
       instructionType: SolanaAttestationServiceInstruction.CreateTokenizedAttestation;
-    } & ParsedCreateTokenizedAttestationInstruction<TProgram>);
+    } & ParsedCreateTokenizedAttestationInstruction<TProgram>)
+  | ({
+      instructionType: SolanaAttestationServiceInstruction.CreateRequest;
+    } & ParsedCreateRequestInstruction<TProgram>);

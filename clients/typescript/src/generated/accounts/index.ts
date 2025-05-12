@@ -8,4 +8,5 @@
 
 export * from './attestation';
 export * from './credential';
+export * from './request';
 export * from './schema';

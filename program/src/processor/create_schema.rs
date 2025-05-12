@@ -23,7 +23,13 @@ pub fn process_create_schema(
     accounts: &[AccountInfo],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    let [payer_info, authority_info, credential_info, schema_info, system_program] = accounts
+    let [
+        payer_info, 
+        authority_info, 
+        credential_info, 
+        schema_info, 
+        system_program
+    ] = accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };

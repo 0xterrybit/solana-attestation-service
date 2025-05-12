@@ -43,3 +43,59 @@ Run client generation script
 ```
 pnpm run generate-clients
 ```
+
+
+pnpm run generate-idl && pnpm run generate-clients 
+
+solana program set-upgrade-authority <PROGRAM_ID> --new-upgrade-authority 8Ez6wwXdS58PyBGxGSB3MQuMRuJsAXaxhMwE79ngVxzU --keypair /Users/gaomin/.config/solana/attestation_admin_test.json --url https://api.devnet.solana.com
+
+## 
+terry's owner: 
+    CJmTPWkPX9GepGNkATHZf2vnEZUr9UVt5MqiDhKPLGVs
+
+solana program set-upgrade-authority D5PPvGRyK6ii3zjUn1zsuetjZbt6tzqL7VkhNiV4UDsJ \
+    --new-upgrade-authority 8Ez6wwXdS58PyBGxGSB3MQuMRuJsAXaxhMwE79ngVxzU \
+    --url https://api.devnet.solana.com
+
+solana program set-upgrade-authority 3WaA2C9VRHczjqcdVgWw8Ug2VfoCVbCzEp9bwPPG6Qj6
+    --new-upgrade-authority ~/.config/solana/rnspay_admin.json \
+
+solana program \
+    set-upgrade-authority 3WaA2C9VRHczjqcdVgWw8Ug2VfoCVbCzEp9bwPPG6Qj6 \
+    --new-upgrade-authority ~/.config/solana/rnspay_admin.json \ 
+    -k ~/.config/solana/attestation_admin_test.json  \ 
+    --url https://api.devnet.solana.com
+ 
+
+
+
+
+rpc_url: https://solana-devnet.g.alchemy.com/v2/raUQZnASib5C8Yku7AuhmhV_-PFWKtNM
+request program_id: D5PPvGRyK6ii3zjUn1zsuetjZbt6tzqL7VkhNiV4UDsJ
+request authority: A6WcyjnyU4nBD66tKxzg35bYCkeNqF4MCtQr7pwreVAv
+request credential_name: rns_credential_1
+request schema_name: jurisdiction_3
+request query_type: Attestation
+
+
+rpc_url: https://solana-devnet.g.alchemy.com/v2/raUQZnASib5C8Yku7AuhmhV_-PFWKtNM
+request program_id: D5PPvGRyK6ii3zjUn1zsuetjZbt6tzqL7VkhNiV4UDsJ
+request authority: A6WcyjnyU4nBD66tKxzg35bYCkeNqF4MCtQr7pwreVAv
+request credential_name: rns_credential_1
+request schema_name: jurisdiction_3
+
+
+Credential PDA: E4ccYoQdJZhypRPVf1YD3mrLH4NKN9iJqYanf6jKtcvD
+Schema PDA: Bi6dbk7yAQYtumf7jDzZkHYa8nJFTLZffSSWcWaJdDqo
+
+
+Credential PDA: E4ccYoQdJZhypRPVf1YD3mrLH4NKN9iJqYanf6jKtcvD
+Schema PDA: Bi6dbk7yAQYtumf7jDzZkHYa8nJFTLZffSSWcWaJdDqo
+
+
+
+1. rader 
+    加了手续费地址的白名单限制
+
+2. Grant 
+

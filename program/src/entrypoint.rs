@@ -1,8 +1,13 @@
 use pinocchio::{
-    account_info::AccountInfo, entrypoint, program_error::ProgramError, pubkey::Pubkey,
-    ProgramResult,
+    account_info::AccountInfo, 
+    entrypoint, 
+    program_error::ProgramError, 
+    pubkey::Pubkey, 
+    ProgramResult
 };
+use solana_program::msg;
 
+use pinocchio_log::log;
 use crate::processor::*;
 
 entrypoint!(process_instruction);
@@ -12,10 +17,15 @@ pub fn process_instruction(
     accounts: &[AccountInfo],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    let (discriminator, instruction_data) = instruction_data
+    
+    let (
+        discriminator, 
+        instruction_data
+    ) = instruction_data
         .split_first()
         .ok_or(ProgramError::InvalidInstructionData)?;
-
+ 
+    log!("discriminator for: {}", *discriminator);
     match discriminator {
         0 => process_create_credential(program_id, accounts, instruction_data),
         1 => process_create_schema(program_id, accounts, instruction_data),
@@ -28,6 +38,7 @@ pub fn process_instruction(
         8 => process_emit_event(program_id, accounts, instruction_data),
         9 => process_tokenize_schema(program_id, accounts, instruction_data),
         10 => process_create_tokenized_attestation(program_id, accounts, instruction_data),
+        11 => process_create_request(program_id, accounts, instruction_data),
         _ => Err(ProgramError::InvalidInstructionData),
     }
 }

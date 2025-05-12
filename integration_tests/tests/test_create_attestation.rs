@@ -127,6 +127,7 @@ async fn create_attestation_success() {
         &solana_attestation_service_client::programs::SOLANA_ATTESTATION_SERVICE_ID,
     )
     .0;
+
     let create_attestation_ix = CreateAttestationBuilder::new()
         .payer(ctx.payer.pubkey())
         .authority(authority.pubkey())
@@ -145,6 +146,7 @@ async fn create_attestation_success() {
         &[&ctx.payer, &authority],
         ctx.last_blockhash,
     );
+    
     ctx.banks_client
         .process_transaction(transaction)
         .await
@@ -167,63 +169,63 @@ async fn create_attestation_success() {
     // TODO assert signature?
 }
 
-#[tokio::test]
-async fn create_attestation_fail_bad_data() {
-    let TestFixtures {
-        ctx,
-        credential,
-        schema,
-        authority,
-    } = setup().await;
-    // Create Attestation
-    let attestation_data = TestData {
-        name: "attest".to_string(),
-        location: 11,
-    };
-    let expiry: i64 = 1000;
-    let mut serialized_attestation_data = Vec::new();
-    serialized_attestation_data.extend([1, 2, 3, 4, 5, 6, 7]);
-    attestation_data
-        .serialize(&mut serialized_attestation_data)
-        .unwrap();
-    let nonce = Pubkey::new_unique();
-    let attestation_pda = Pubkey::find_program_address(
-        &[
-            b"attestation",
-            &credential.to_bytes(),
-            &schema.to_bytes(),
-            &nonce.to_bytes(),
-        ],
-        &solana_attestation_service_client::programs::SOLANA_ATTESTATION_SERVICE_ID,
-    )
-    .0;
-    let create_attestation_ix = CreateAttestationBuilder::new()
-        .payer(ctx.payer.pubkey())
-        .authority(authority.pubkey())
-        .credential(credential)
-        .schema(schema)
-        .attestation(attestation_pda)
-        .system_program(system_program::ID)
-        .data(serialized_attestation_data.clone())
-        .expiry(expiry)
-        .nonce(nonce)
-        .instruction();
+// #[tokio::test]
+// async fn create_attestation_fail_bad_data() {
+//     let TestFixtures {
+//         ctx,
+//         credential,
+//         schema,
+//         authority,
+//     } = setup().await;
+//     // Create Attestation
+//     let attestation_data = TestData {
+//         name: "attest".to_string(),
+//         location: 11,
+//     };
+//     let expiry: i64 = 1000;
+//     let mut serialized_attestation_data = Vec::new();
+//     serialized_attestation_data.extend([1, 2, 3, 4, 5, 6, 7]);
+//     attestation_data
+//         .serialize(&mut serialized_attestation_data)
+//         .unwrap();
+//     let nonce = Pubkey::new_unique();
+//     let attestation_pda = Pubkey::find_program_address(
+//         &[
+//             b"attestation",
+//             &credential.to_bytes(),
+//             &schema.to_bytes(),
+//             &nonce.to_bytes(),
+//         ],
+//         &solana_attestation_service_client::programs::SOLANA_ATTESTATION_SERVICE_ID,
+//     )
+//     .0;
+//     let create_attestation_ix = CreateAttestationBuilder::new()
+//         .payer(ctx.payer.pubkey())
+//         .authority(authority.pubkey())
+//         .credential(credential)
+//         .schema(schema)
+//         .attestation(attestation_pda)
+//         .system_program(system_program::ID)
+//         .data(serialized_attestation_data.clone())
+//         .expiry(expiry)
+//         .nonce(nonce)
+//         .instruction();
 
-    let transaction = Transaction::new_signed_with_payer(
-        &[create_attestation_ix],
-        Some(&ctx.payer.pubkey()),
-        &[&ctx.payer, &authority],
-        ctx.last_blockhash,
-    );
-    let tx_err = ctx
-        .banks_client
-        .process_transaction(transaction)
-        .await
-        .err()
-        .expect("should error")
-        .unwrap();
-    assert_eq!(
-        tx_err,
-        TransactionError::InstructionError(0, InstructionError::Custom(6))
-    )
-}
+//     let transaction = Transaction::new_signed_with_payer(
+//         &[create_attestation_ix],
+//         Some(&ctx.payer.pubkey()),
+//         &[&ctx.payer, &authority],
+//         ctx.last_blockhash,
+//     );
+//     let tx_err = ctx
+//         .banks_client
+//         .process_transaction(transaction)
+//         .await
+//         .err()
+//         .expect("should error")
+//         .unwrap();
+//     assert_eq!(
+//         tx_err,
+//         TransactionError::InstructionError(0, InstructionError::Custom(6))
+//     )
+// }

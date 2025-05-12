@@ -7,21 +7,28 @@
 
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
+use solana_program::pubkey::Pubkey;
 
 /// Accounts.
 #[derive(Debug)]
-pub struct ChangeSchemaStatus {
+pub struct CreateRequest {
+    pub payer: solana_program::pubkey::Pubkey,
+    /// Authorized signer of the Schema's Credential
     pub authority: solana_program::pubkey::Pubkey,
     /// Credential the Schema is associated with
     pub credential: solana_program::pubkey::Pubkey,
-    /// Credential the Schema is associated with
+    /// Schema the Attestation is associated with
     pub schema: solana_program::pubkey::Pubkey,
+
+    pub request: solana_program::pubkey::Pubkey,
+
+    pub system_program: solana_program::pubkey::Pubkey,
 }
 
-impl ChangeSchemaStatus {
+impl CreateRequest {
     pub fn instruction(
         &self,
-        args: ChangeSchemaStatusInstructionArgs,
+        args: CreateRequestInstructionArgs,
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
@@ -29,24 +36,35 @@ impl ChangeSchemaStatus {
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: ChangeSchemaStatusInstructionArgs,
+        args: CreateRequestInstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(3 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+        let mut accounts = Vec::with_capacity(6 + remaining_accounts.len());
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.payer, true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
             self.authority,
-            true,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.credential,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.schema,
             false,
         ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.request,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.system_program,
+            false,
+        ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&ChangeSchemaStatusInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&CreateRequestInstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
@@ -60,17 +78,17 @@ impl ChangeSchemaStatus {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct ChangeSchemaStatusInstructionData {
+pub struct CreateRequestInstructionData {
     discriminator: u8,
 }
 
-impl ChangeSchemaStatusInstructionData {
+impl CreateRequestInstructionData {
     pub fn new() -> Self {
-        Self { discriminator: 2 }
+        Self { discriminator: 11 }
     }
 }
 
-impl Default for ChangeSchemaStatusInstructionData {
+impl Default for CreateRequestInstructionData {
     fn default() -> Self {
         Self::new()
     }
@@ -78,30 +96,46 @@ impl Default for ChangeSchemaStatusInstructionData {
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct ChangeSchemaStatusInstructionArgs {
-    pub is_paused: bool,
+pub struct CreateRequestInstructionArgs {
+    pub nonce: Pubkey,
+    pub data: Vec<u8>,
+    pub expiry: i64,
 }
 
-/// Instruction builder for `ChangeSchemaStatus`.
+/// Instruction builder for `CreateRequest`.
 ///
 /// ### Accounts:
 ///
-///   0. `[signer]` authority
-///   1. `[]` credential
-///   2. `[writable]` schema
+///   0. `[writable, signer]` payer
+///   1. `[writable]` authority
+///   2. `[]` credential
+///   3. `[]` schema
+///   4. `[writable]` request
+///   5. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
-pub struct ChangeSchemaStatusBuilder {
+pub struct CreateRequestBuilder {
+    payer: Option<solana_program::pubkey::Pubkey>,
     authority: Option<solana_program::pubkey::Pubkey>,
     credential: Option<solana_program::pubkey::Pubkey>,
     schema: Option<solana_program::pubkey::Pubkey>,
-    is_paused: Option<bool>,
+    request: Option<solana_program::pubkey::Pubkey>,
+    system_program: Option<solana_program::pubkey::Pubkey>,
+    nonce: Option<Pubkey>,
+    data: Option<Vec<u8>>,
+    expiry: Option<i64>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
-impl ChangeSchemaStatusBuilder {
+impl CreateRequestBuilder {
     pub fn new() -> Self {
         Self::default()
     }
+    #[inline(always)]
+    pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.payer = Some(payer);
+        self
+    }
+    /// Authorized signer of the Schema's Credential
     #[inline(always)]
     pub fn authority(&mut self, authority: solana_program::pubkey::Pubkey) -> &mut Self {
         self.authority = Some(authority);
@@ -113,15 +147,36 @@ impl ChangeSchemaStatusBuilder {
         self.credential = Some(credential);
         self
     }
-    /// Credential the Schema is associated with
+    /// Schema the Attestation is associated with
     #[inline(always)]
     pub fn schema(&mut self, schema: solana_program::pubkey::Pubkey) -> &mut Self {
         self.schema = Some(schema);
         self
     }
     #[inline(always)]
-    pub fn is_paused(&mut self, is_paused: bool) -> &mut Self {
-        self.is_paused = Some(is_paused);
+    pub fn request(&mut self, request: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.request = Some(request);
+        self
+    }
+    /// `[optional account, default to '11111111111111111111111111111111']`
+    #[inline(always)]
+    pub fn system_program(&mut self, system_program: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.system_program = Some(system_program);
+        self
+    }
+    #[inline(always)]
+    pub fn nonce(&mut self, nonce: Pubkey) -> &mut Self {
+        self.nonce = Some(nonce);
+        self
+    }
+    #[inline(always)]
+    pub fn data(&mut self, data: Vec<u8>) -> &mut Self {
+        self.data = Some(data);
+        self
+    }
+    #[inline(always)]
+    pub fn expiry(&mut self, expiry: i64) -> &mut Self {
+        self.expiry = Some(expiry);
         self
     }
     /// Add an additional account to the instruction.
@@ -144,53 +199,75 @@ impl ChangeSchemaStatusBuilder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let accounts = ChangeSchemaStatus {
+        let accounts = CreateRequest {
+            payer: self.payer.expect("payer is not set"),
             authority: self.authority.expect("authority is not set"),
             credential: self.credential.expect("credential is not set"),
             schema: self.schema.expect("schema is not set"),
+            request: self.request.expect("request is not set"),
+            system_program: self
+                .system_program
+                .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
         };
-        let args = ChangeSchemaStatusInstructionArgs {
-            is_paused: self.is_paused.clone().expect("is_paused is not set"),
+        let args = CreateRequestInstructionArgs {
+            nonce: self.nonce.clone().expect("nonce is not set"),
+            data: self.data.clone().expect("data is not set"),
+            expiry: self.expiry.clone().expect("expiry is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
-/// `change_schema_status` CPI accounts.
-pub struct ChangeSchemaStatusCpiAccounts<'a, 'b> {
+/// `create_request` CPI accounts.
+pub struct CreateRequestCpiAccounts<'a, 'b> {
+    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    /// Authorized signer of the Schema's Credential
     pub authority: &'b solana_program::account_info::AccountInfo<'a>,
     /// Credential the Schema is associated with
     pub credential: &'b solana_program::account_info::AccountInfo<'a>,
-    /// Credential the Schema is associated with
+    /// Schema the Attestation is associated with
     pub schema: &'b solana_program::account_info::AccountInfo<'a>,
+
+    pub request: &'b solana_program::account_info::AccountInfo<'a>,
+
+    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-/// `change_schema_status` CPI instruction.
-pub struct ChangeSchemaStatusCpi<'a, 'b> {
+/// `create_request` CPI instruction.
+pub struct CreateRequestCpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
 
+    pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    /// Authorized signer of the Schema's Credential
     pub authority: &'b solana_program::account_info::AccountInfo<'a>,
     /// Credential the Schema is associated with
     pub credential: &'b solana_program::account_info::AccountInfo<'a>,
-    /// Credential the Schema is associated with
+    /// Schema the Attestation is associated with
     pub schema: &'b solana_program::account_info::AccountInfo<'a>,
+
+    pub request: &'b solana_program::account_info::AccountInfo<'a>,
+
+    pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: ChangeSchemaStatusInstructionArgs,
+    pub __args: CreateRequestInstructionArgs,
 }
 
-impl<'a, 'b> ChangeSchemaStatusCpi<'a, 'b> {
+impl<'a, 'b> CreateRequestCpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
-        accounts: ChangeSchemaStatusCpiAccounts<'a, 'b>,
-        args: ChangeSchemaStatusInstructionArgs,
+        accounts: CreateRequestCpiAccounts<'a, 'b>,
+        args: CreateRequestInstructionArgs,
     ) -> Self {
         Self {
             __program: program,
+            payer: accounts.payer,
             authority: accounts.authority,
             credential: accounts.credential,
             schema: accounts.schema,
+            request: accounts.request,
+            system_program: accounts.system_program,
             __args: args,
         }
     }
@@ -228,17 +305,29 @@ impl<'a, 'b> ChangeSchemaStatusCpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(3 + remaining_accounts.len());
-        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.authority.key,
+        let mut accounts = Vec::with_capacity(6 + remaining_accounts.len());
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.payer.key,
             true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.authority.key,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.credential.key,
             false,
         ));
-        accounts.push(solana_program::instruction::AccountMeta::new(
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.schema.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.request.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.system_program.key,
             false,
         ));
         remaining_accounts.iter().for_each(|remaining_account| {
@@ -248,7 +337,7 @@ impl<'a, 'b> ChangeSchemaStatusCpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&ChangeSchemaStatusInstructionData::new()).unwrap();
+        let mut data = borsh::to_vec(&CreateRequestInstructionData::new()).unwrap();
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
@@ -257,11 +346,14 @@ impl<'a, 'b> ChangeSchemaStatusCpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(4 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(7 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
+        account_infos.push(self.payer.clone());
         account_infos.push(self.authority.clone());
         account_infos.push(self.credential.clone());
         account_infos.push(self.schema.clone());
+        account_infos.push(self.request.clone());
+        account_infos.push(self.system_program.clone());
         remaining_accounts
             .iter()
             .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
@@ -274,30 +366,44 @@ impl<'a, 'b> ChangeSchemaStatusCpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `ChangeSchemaStatus` via CPI.
+/// Instruction builder for `CreateRequest` via CPI.
 ///
 /// ### Accounts:
 ///
-///   0. `[signer]` authority
-///   1. `[]` credential
-///   2. `[writable]` schema
+///   0. `[writable, signer]` payer
+///   1. `[writable]` authority
+///   2. `[]` credential
+///   3. `[]` schema
+///   4. `[writable]` request
+///   5. `[]` system_program
 #[derive(Clone, Debug)]
-pub struct ChangeSchemaStatusCpiBuilder<'a, 'b> {
-    instruction: Box<ChangeSchemaStatusCpiBuilderInstruction<'a, 'b>>,
+pub struct CreateRequestCpiBuilder<'a, 'b> {
+    instruction: Box<CreateRequestCpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> ChangeSchemaStatusCpiBuilder<'a, 'b> {
+impl<'a, 'b> CreateRequestCpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(ChangeSchemaStatusCpiBuilderInstruction {
+        let instruction = Box::new(CreateRequestCpiBuilderInstruction {
             __program: program,
+            payer: None,
             authority: None,
             credential: None,
             schema: None,
-            is_paused: None,
+            request: None,
+            system_program: None,
+            nonce: None,
+            data: None,
+            expiry: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
+    #[inline(always)]
+    pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.payer = Some(payer);
+        self
+    }
+    /// Authorized signer of the Schema's Credential
     #[inline(always)]
     pub fn authority(
         &mut self,
@@ -315,7 +421,7 @@ impl<'a, 'b> ChangeSchemaStatusCpiBuilder<'a, 'b> {
         self.instruction.credential = Some(credential);
         self
     }
-    /// Credential the Schema is associated with
+    /// Schema the Attestation is associated with
     #[inline(always)]
     pub fn schema(
         &mut self,
@@ -325,8 +431,34 @@ impl<'a, 'b> ChangeSchemaStatusCpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn is_paused(&mut self, is_paused: bool) -> &mut Self {
-        self.instruction.is_paused = Some(is_paused);
+    pub fn request(
+        &mut self,
+        request: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.request = Some(request);
+        self
+    }
+    #[inline(always)]
+    pub fn system_program(
+        &mut self,
+        system_program: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.system_program = Some(system_program);
+        self
+    }
+    #[inline(always)]
+    pub fn nonce(&mut self, nonce: Pubkey) -> &mut Self {
+        self.instruction.nonce = Some(nonce);
+        self
+    }
+    #[inline(always)]
+    pub fn data(&mut self, data: Vec<u8>) -> &mut Self {
+        self.instruction.data = Some(data);
+        self
+    }
+    #[inline(always)]
+    pub fn expiry(&mut self, expiry: i64) -> &mut Self {
+        self.instruction.expiry = Some(expiry);
         self
     }
     /// Add an additional account to the instruction.
@@ -370,21 +502,28 @@ impl<'a, 'b> ChangeSchemaStatusCpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let args = ChangeSchemaStatusInstructionArgs {
-            is_paused: self
-                .instruction
-                .is_paused
-                .clone()
-                .expect("is_paused is not set"),
+        let args = CreateRequestInstructionArgs {
+            nonce: self.instruction.nonce.clone().expect("nonce is not set"),
+            data: self.instruction.data.clone().expect("data is not set"),
+            expiry: self.instruction.expiry.clone().expect("expiry is not set"),
         };
-        let instruction = ChangeSchemaStatusCpi {
+        let instruction = CreateRequestCpi {
             __program: self.instruction.__program,
+
+            payer: self.instruction.payer.expect("payer is not set"),
 
             authority: self.instruction.authority.expect("authority is not set"),
 
             credential: self.instruction.credential.expect("credential is not set"),
 
             schema: self.instruction.schema.expect("schema is not set"),
+
+            request: self.instruction.request.expect("request is not set"),
+
+            system_program: self
+                .instruction
+                .system_program
+                .expect("system_program is not set"),
             __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
@@ -395,12 +534,17 @@ impl<'a, 'b> ChangeSchemaStatusCpiBuilder<'a, 'b> {
 }
 
 #[derive(Clone, Debug)]
-struct ChangeSchemaStatusCpiBuilderInstruction<'a, 'b> {
+struct CreateRequestCpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
+    payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     credential: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     schema: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    is_paused: Option<bool>,
+    request: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    nonce: Option<Pubkey>,
+    data: Option<Vec<u8>>,
+    expiry: Option<i64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

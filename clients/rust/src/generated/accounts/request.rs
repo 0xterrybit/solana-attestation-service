@@ -11,22 +11,33 @@ use solana_program::pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct Schema {
+pub struct Request {
     pub discriminator: u8,
     #[cfg_attr(
         feature = "serde",
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub credential: Pubkey,
-    pub name: Vec<u8>,
-    pub description: Vec<u8>,
-    pub layout: Vec<u8>,
-    pub field_names: Vec<u8>,
-    pub is_paused: bool,
-    pub version: u8,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub schema: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub signer: Pubkey,
+    pub data: Vec<u8>,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub nonce: Pubkey,
+    pub expiry: i64,
 }
 
-impl Schema {
+impl Request {
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
         let mut data = data;
@@ -34,7 +45,7 @@ impl Schema {
     }
 }
 
-impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for Schema {
+impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for Request {
     type Error = std::io::Error;
 
     fn try_from(
@@ -46,30 +57,30 @@ impl<'a> TryFrom<&solana_program::account_info::AccountInfo<'a>> for Schema {
 }
 
 #[cfg(feature = "fetch")]
-pub fn fetch_schema(
+pub fn fetch_request(
     rpc: &solana_client::rpc_client::RpcClient,
     address: &solana_program::pubkey::Pubkey,
-) -> Result<crate::shared::DecodedAccount<Schema>, std::io::Error> {
-    let accounts = fetch_all_schema(rpc, &[*address])?;
+) -> Result<crate::shared::DecodedAccount<Request>, std::io::Error> {
+    let accounts = fetch_all_request(rpc, &[*address])?;
     Ok(accounts[0].clone())
 }
 
 #[cfg(feature = "fetch")]
-pub fn fetch_all_schema(
+pub fn fetch_all_request(
     rpc: &solana_client::rpc_client::RpcClient,
     addresses: &[solana_program::pubkey::Pubkey],
-) -> Result<Vec<crate::shared::DecodedAccount<Schema>>, std::io::Error> {
+) -> Result<Vec<crate::shared::DecodedAccount<Request>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-    let mut decoded_accounts: Vec<crate::shared::DecodedAccount<Schema>> = Vec::new();
+    let mut decoded_accounts: Vec<crate::shared::DecodedAccount<Request>> = Vec::new();
     for i in 0..addresses.len() {
         let address = addresses[i];
         let account = accounts[i].as_ref().ok_or(std::io::Error::new(
             std::io::ErrorKind::Other,
             format!("Account not found: {}", address),
         ))?;
-        let data = Schema::from_bytes(&account.data)?;
+        let data = Request::from_bytes(&account.data)?;
         decoded_accounts.push(crate::shared::DecodedAccount {
             address,
             account: account.clone(),
@@ -80,27 +91,27 @@ pub fn fetch_all_schema(
 }
 
 #[cfg(feature = "fetch")]
-pub fn fetch_maybe_schema(
+pub fn fetch_maybe_request(
     rpc: &solana_client::rpc_client::RpcClient,
     address: &solana_program::pubkey::Pubkey,
-) -> Result<crate::shared::MaybeAccount<Schema>, std::io::Error> {
-    let accounts = fetch_all_maybe_schema(rpc, &[*address])?;
+) -> Result<crate::shared::MaybeAccount<Request>, std::io::Error> {
+    let accounts = fetch_all_maybe_request(rpc, &[*address])?;
     Ok(accounts[0].clone())
 }
 
 #[cfg(feature = "fetch")]
-pub fn fetch_all_maybe_schema(
+pub fn fetch_all_maybe_request(
     rpc: &solana_client::rpc_client::RpcClient,
     addresses: &[solana_program::pubkey::Pubkey],
-) -> Result<Vec<crate::shared::MaybeAccount<Schema>>, std::io::Error> {
+) -> Result<Vec<crate::shared::MaybeAccount<Request>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-    let mut decoded_accounts: Vec<crate::shared::MaybeAccount<Schema>> = Vec::new();
+    let mut decoded_accounts: Vec<crate::shared::MaybeAccount<Request>> = Vec::new();
     for i in 0..addresses.len() {
         let address = addresses[i];
         if let Some(account) = accounts[i].as_ref() {
-            let data = Schema::from_bytes(&account.data)?;
+            let data = Request::from_bytes(&account.data)?;
             decoded_accounts.push(crate::shared::MaybeAccount::Exists(
                 crate::shared::DecodedAccount {
                     address,
@@ -116,26 +127,26 @@ pub fn fetch_all_maybe_schema(
 }
 
 #[cfg(feature = "anchor")]
-impl anchor_lang::AccountDeserialize for Schema {
+impl anchor_lang::AccountDeserialize for Request {
     fn try_deserialize_unchecked(buf: &mut &[u8]) -> anchor_lang::Result<Self> {
         Ok(Self::deserialize(buf)?)
     }
 }
 
 #[cfg(feature = "anchor")]
-impl anchor_lang::AccountSerialize for Schema {}
+impl anchor_lang::AccountSerialize for Request {}
 
 #[cfg(feature = "anchor")]
-impl anchor_lang::Owner for Schema {
+impl anchor_lang::Owner for Request {
     fn owner() -> Pubkey {
         crate::SOLANA_ATTESTATION_SERVICE_ID
     }
 }
 
 #[cfg(feature = "anchor-idl-build")]
-impl anchor_lang::IdlBuild for Schema {}
+impl anchor_lang::IdlBuild for Request {}
 
 #[cfg(feature = "anchor-idl-build")]
-impl anchor_lang::Discriminator for Schema {
+impl anchor_lang::Discriminator for Request {
     const DISCRIMINATOR: [u8; 8] = [0; 8];
 }

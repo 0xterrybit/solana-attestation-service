@@ -13,21 +13,43 @@ pub fn process_create_schema(args: &Args, sub_args: &CreateSchemaArgs) {
     let payer = args.get_keypair(); 
     let authority = &payer;
 
-    println!("使用钱包地址: {}", payer.pubkey());
-
     // 程序 ID
-    let program_id = args.get_program_id();
+    let program_id = args.program_id;
     
     let credential_name = &sub_args.credential_name; 
     let (credential_pda, _) = get_credential_pda(&program_id, &authority.pubkey(), credential_name);
 
-    let schema_name =  &sub_args.schema_name; 
-    let (schema_pda, _) = get_schema_pda(&program_id, &credential_pda, schema_name);
-    println!("Schema PDA: {}", schema_pda);
 
+    let schema_layout;
+    let field_names;
+    let schema_type = &sub_args.schema_type;
+    match schema_type {
+        SchemaType::AgeOver18 => {
+            schema_layout = AgeOver18::get_serialized_representation();
+            field_names = vec!["age_over18".into()];
+        },
+        SchemaType::AgeOver21 => {
+            schema_layout = AgeOver21::get_serialized_representation();
+            field_names = vec!["age_over21".into()];
+        },
+        SchemaType::Jurisdiction => {
+            schema_layout = Jurisdiction::get_serialized_representation();
+            field_names = vec!["jurisdiction".into()];
+        },
+        SchemaType::Gender => {
+            schema_layout = Gender::get_serialized_representation();
+            field_names = vec!["gender".into()];
+        },
+        SchemaType::BirthYear => {
+            schema_layout = BirthYear::get_serialized_representation();
+            field_names = vec!["birth_year".into()];
+        }
+    }
+
+    let schema_name =  &sub_args.schema_name; 
     let description =  &sub_args.description; 
-    let schema_layout =  sub_args.schema_layout.clone(); 
-    let field_names =  sub_args.field_names.clone(); 
+
+    let (schema_pda, _) = get_schema_pda(&program_id, &credential_pda, schema_name);
 
     // 3. 创建 Schema 
     let create_schema_ix = CreateSchemaBuilder::new()
