@@ -20,7 +20,6 @@ import {
   type ParsedCloseAttestationInstruction,
   type ParsedCreateAttestationInstruction,
   type ParsedCreateCredentialInstruction,
-  type ParsedCreateRequestInstruction,
   type ParsedCreateSchemaInstruction,
   type ParsedCreateTokenizedAttestationInstruction,
   type ParsedEmitEventInstruction,
@@ -28,7 +27,7 @@ import {
 } from '../instructions';
 
 export const SOLANA_ATTESTATION_SERVICE_PROGRAM_ADDRESS =
-  'D5PPvGRyK6ii3zjUn1zsuetjZbt6tzqL7VkhNiV4UDsJ' as Address<'D5PPvGRyK6ii3zjUn1zsuetjZbt6tzqL7VkhNiV4UDsJ'>;
+  '22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG' as Address<'22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG'>;
 
 export enum SolanaAttestationServiceAccount {
   Attestation,
@@ -49,7 +48,6 @@ export enum SolanaAttestationServiceInstruction {
   EmitEvent,
   TokenizeSchema,
   CreateTokenizedAttestation,
-  CreateRequest,
 }
 
 export function identifySolanaAttestationServiceInstruction(
@@ -89,16 +87,14 @@ export function identifySolanaAttestationServiceInstruction(
   if (containsBytes(data, getU8Encoder().encode(10), 0)) {
     return SolanaAttestationServiceInstruction.CreateTokenizedAttestation;
   }
-  if (containsBytes(data, getU8Encoder().encode(11), 0)) {
-    return SolanaAttestationServiceInstruction.CreateRequest;
-  }
+  
   throw new Error(
     'The provided instruction could not be identified as a solanaAttestationService instruction.'
   );
 }
 
 export type ParsedSolanaAttestationServiceInstruction<
-  TProgram extends string = 'D5PPvGRyK6ii3zjUn1zsuetjZbt6tzqL7VkhNiV4UDsJ',
+  TProgram extends string = '22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG',
 > =
   | ({
       instructionType: SolanaAttestationServiceInstruction.CreateCredential;
@@ -132,7 +128,4 @@ export type ParsedSolanaAttestationServiceInstruction<
     } & ParsedTokenizeSchemaInstruction<TProgram>)
   | ({
       instructionType: SolanaAttestationServiceInstruction.CreateTokenizedAttestation;
-    } & ParsedCreateTokenizedAttestationInstruction<TProgram>)
-  | ({
-      instructionType: SolanaAttestationServiceInstruction.CreateRequest;
-    } & ParsedCreateRequestInstruction<TProgram>);
+    } & ParsedCreateTokenizedAttestationInstruction<TProgram>);

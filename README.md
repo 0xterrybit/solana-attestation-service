@@ -90,4 +90,26 @@ Schema PDA: Bi6dbk7yAQYtumf7jDzZkHYa8nJFTLZffSSWcWaJdDqo
 Credential PDA: E4ccYoQdJZhypRPVf1YD3mrLH4NKN9iJqYanf6jKtcvD
 Schema PDA: Bi6dbk7yAQYtumf7jDzZkHYa8nJFTLZffSSWcWaJdDqo
 
- 
+
+
+
+cargo run --bin cli create-credential
+
+cargo run --bin cli create-schema --credential-name RNS_PROOF --schema-type gender --schema-name gender
+cargo run --bin cli create-schema --credential-name RNS_PROOF --schema-type birth_year --schema-name birth_year
+cargo run --bin cli create-schema --credential-name RNS_PROOF --schema-type age_over21 --schema-name age_over21
+cargo run --bin cli create-schema --credential-name RNS_PROOF --schema-type age_over18 --schema-name age_over18
+    J6RGBiAd3PQHgVdasfJx19NU1aa5GjxKLJmtMRtzbDf2
+cargo run --bin cli create-schema --credential-name RNS_PROOF --schema-type jurisdiction --schema-name jurisdiction
+    Had9DqEanDdiYq1D3kMMBa3rNcMstLjP8J1eH8DthCoM
+
+
+
+22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG
+cargo run --bin cli create-schema \
+    --credential-name RNS_PROOF \
+    --schema-name jurisdiction \
+    --schema-type jurisdiction
+
+
+    

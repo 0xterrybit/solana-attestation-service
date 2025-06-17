@@ -19,7 +19,6 @@ pub fn process_create_schema(args: &Args, sub_args: &CreateSchemaArgs) {
     let credential_name = &sub_args.credential_name; 
     let (credential_pda, _) = get_credential_pda(&program_id, &authority.pubkey(), credential_name);
 
-
     let schema_layout;
     let field_names;
     let schema_type = &sub_args.schema_type;

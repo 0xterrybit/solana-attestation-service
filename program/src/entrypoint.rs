@@ -5,7 +5,7 @@ use pinocchio::{
     pubkey::Pubkey, 
     ProgramResult
 };
-use solana_program::msg;
+// use solana_program::msg;
 
 use pinocchio_log::log;
 use crate::processor::*;

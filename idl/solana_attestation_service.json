@@ -180,6 +180,11 @@
       "name": "ChangeSchemaDescription",
       "accounts": [
         {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
           "name": "authority",
           "isMut": false,
           "isSigner": true
@@ -594,7 +599,7 @@
       }
     },
     {
-      "name": "CreateRequest",
+      "name": "CloseTokenizedAttestation",
       "accounts": [
         {
           "name": "payer",
@@ -603,8 +608,8 @@
         },
         {
           "name": "authority",
-          "isMut": true,
-          "isSigner": false,
+          "isMut": false,
+          "isSigner": true,
           "docs": [
             "Authorized signer of the Schema's Credential"
           ]
@@ -612,44 +617,59 @@
         {
           "name": "credential",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Credential the Schema is associated with"
-          ]
+          "isSigner": false
         },
         {
-          "name": "schema",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Schema the Attestation is associated with"
-          ]
-        },
-        {
-          "name": "request",
+          "name": "attestation",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "eventAuthority",
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "nonce",
-          "type": "publicKey"
         },
         {
-          "name": "data",
-          "type": "bytes"
+          "name": "attestationProgram",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "expiry",
-          "type": "i64"
+          "name": "attestationMint",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Mint of Attestation Token"
+          ]
+        },
+        {
+          "name": "sasPda",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Program derived address used as program signer authority"
+          ]
+        },
+        {
+          "name": "attestationTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Associated token account of the related Attestation Token"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 11
@@ -685,6 +705,10 @@
           {
             "name": "expiry",
             "type": "i64"
+          },
+          {
+            "name": "tokenAccount",
+            "type": "publicKey"
           }
         ]
       }
@@ -707,38 +731,6 @@
             "type": {
               "vec": "publicKey"
             }
-          }
-        ]
-      }
-    },
-    {
-      "name": "Request",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "credential",
-            "type": "publicKey"
-          },
-          {
-            "name": "schema",
-            "type": "publicKey"
-          },
-          {
-            "name": "signer",
-            "type": "publicKey"
-          },
-          {
-            "name": "data",
-            "type": "bytes"
-          },
-          {
-            "name": "nonce",
-            "type": "publicKey"
-          },
-          {
-            "name": "expiry",
-            "type": "i64"
           }
         ]
       }
@@ -804,6 +796,6 @@
   ],
   "metadata": {
     "origin": "shank",
-    "address": "D5PPvGRyK6ii3zjUn1zsuetjZbt6tzqL7VkhNiV4UDsJ"
+    "address": "22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG"
   }
 }

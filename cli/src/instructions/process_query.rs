@@ -4,7 +4,6 @@ use solana_attestation_service_client::accounts::{
     fetch_all_attestation, 
     fetch_all_credential, 
     fetch_all_schema, 
-    fetch_all_request,
 };
 use solana_sdk::{
     pubkey::Pubkey,
@@ -30,14 +29,7 @@ pub fn process_query(args: &Args, sub_args: &QueryArgs) -> Result<()> {
 
     println!("Credential PDA: {}", credential_pda);
     println!("Schema PDA: {}", schema_pda);
-
-    println!("request program_id: {}", program_id.to_string());
-    println!("request authority: {}", authority.to_string());
-
-    println!("request credential_name: {}", credential_name);
-    println!("request schema_name: {}", schema_name);
-    println!("request query_type: {:?}", query_type);
-
+ 
     match query_type {
         QueryType::Credential => {
             let _ = get_all_credential_list(&program_id, &client);
@@ -47,9 +39,6 @@ pub fn process_query(args: &Args, sub_args: &QueryArgs) -> Result<()> {
         },
         QueryType::Attestation => {
             let _ = get_all_attestation_list(&program_id, &client, &credential_pda, &schema_pda);
-        },
-        QueryType::Request => {
-            let _ = get_all_request_list(&program_id, &client, &credential_pda, &schema_pda);
         },
     }
     Ok(())
@@ -90,9 +79,9 @@ fn get_all_schema_list(
         println!("schema {:?} field_names: {:?}", i, deserialized_field_names);
         println!("schema {:?} version: {:?}", i, account.data.version.to_string());
         println!("schema {:?} is_paused: {:?}", i, account.data.is_paused.to_string());
+        // println!("schema {:?} {:?}", i, account.data);
+
     }
-
-
     Ok(())
 }
 
@@ -116,6 +105,8 @@ fn get_all_attestation_list(
         println!("attestation {:?} nonce: {:?}", i, attestation_account.data.nonce.to_string());
         println!("attestation {:?} schema: {:?}", i, attestation_account.data.schema.to_string());
         println!("attestation {:?} expiry: {:?}", i, attestation_account.data.expiry.to_string());
+
+        // println!("attestation {:?} data: {:?}", i, attestation_account.data);
     }
 
     Ok(())
@@ -131,31 +122,8 @@ fn get_all_credential_list(
 
     for (i, credential_account) in credential_accounts.iter().enumerate() {
         println!("credential {:?} authority: {:?}", i, credential_account.data.authority.to_string());
+        // println!("credential {:?} Data: {:?}", i, credential_account.data);
         println!("credential {:?} name: {:?}", i, String::from_utf8(credential_account.data.name.clone())? );
     }
-    Ok(())
-}
-
-fn get_all_request_list(
-    program_id: &Pubkey,
-    client: &RpcClient,
-    credential_pda: &Pubkey,
-    schema_pda: &Pubkey,
-) -> Result<()> {
-    
-    let requests = get_all_request_addresses(&program_id, &client, &credential_pda, &schema_pda)?;
-    let request_accounts = fetch_all_request(&client, &requests)?;
-    println!("requests lenth: {}", &requests.len());
-    for (i, request_account) in request_accounts.iter().enumerate() {
-
-        let deserialized_data = Jurisdiction::try_from_slice(&request_account.data.data).unwrap();
-        println!("request {:?} deserialized_data: {:?}", i, deserialized_data);
-        println!("request {:?} pda address: {:?}", i, request_account.address.to_string());
-        println!("request {:?} credential : {:?}", i, request_account.data.credential.to_string());
-        println!("request {:?} nonce: {:?}", i, request_account.data.nonce.to_string());
-        println!("request {:?} schema: {:?}", i, request_account.data.schema.to_string());
-        // println!("request {:?} expiry: {:?}", i, request_account.data.expiry.to_string());
-    }
-
     Ok(())
 }

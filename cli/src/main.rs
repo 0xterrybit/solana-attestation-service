@@ -14,7 +14,7 @@ use dotenv::dotenv;
 pub mod instructions;
 use instructions::*;
 
-pub const CREDENTIAL_NAME: &str = "RNS_CREDENTIAL";
+pub const CREDENTIAL_NAME: &str = "RNS_PROOF";
 pub const SCHEMA_NAME: &str = "jurisdiction";
 
 #[derive(BorshSerialize, BorshDeserialize, SchemaStructSerialize, Debug)]
@@ -93,7 +93,7 @@ impl Args {
 // CreateCredential subcommand args
 #[derive(Parser, Debug)]
 pub struct CreateCredentialArgs {
-    /// Specify the credential name to use, ex: RNS_CREDENTIAL
+    /// Specify the credential name to use, ex: RNS_PROOF
     #[clap(long, env, default_value = CREDENTIAL_NAME )]
     credential_name: String,
 }
@@ -138,10 +138,7 @@ pub struct CreateAttestationArgs {
     /// Specify the schema type to use, ex: jurisdiction, age_over18, age_over21, birth_year, gender
     #[clap(long, default_value = "jurisdiction")]
     schema_type: SchemaType,
-
-     /// Specify the birth_year to use, ex: 2000
-     #[clap(long)]
-     birth_year: u32,
+    
 }
 
 
@@ -166,64 +163,6 @@ pub struct CreateAttestationInput {
     // schema_type: SchemaType,
 
     /// Specify the attestation_data to use
-    #[clap(long)]
-    attestation_data: Vec<u8>,
-
-    // /// Specify the birth_year to use, ex: 2000
-    // #[clap(long)]
-    // birth_year: Option<u32>,
-
-    // /// Specify the gender to use, ex: true
-    // #[clap(long)]
-    // gender: Option<bool>,
-}
-
-// CreateRequest subcommand args
-#[derive(Parser, Debug)]
-pub struct CreateRequestArgs {
-    
-    /// Specify the credential name to use, ex: RNS_CREDENTIAL
-    #[clap(long, default_value = CREDENTIAL_NAME )]
-    credential_name: String,
-
-    /// Specify the schema name to use, ex: jurisdiction
-    #[clap(long, default_value = SCHEMA_NAME )]
-    schema_name: String,
-    
-    /// Specify the recipient to use, ex: A6WcyjnyU4nBD66tKxzg35bYCkeNqF4MCtQr7pwreVAv
-    #[clap(long)]
-    recipient: String,
-
-    /// Specify the schema type to use, ex: jurisdiction, age_over18, age_over21, birth_year, gender
-    #[clap(long, default_value = "jurisdiction")]
-    schema_type: SchemaType,
-
-    /// Specify the birth_year to use, ex: 2000
-    #[clap(long)]
-    birth_year: Option<u32>,
-
-    /// Specify the gender to use, ex: true
-    #[clap(long)]
-    gender: Option<bool>,
-
-}
-
-// CreateRequest subcommand args
-#[derive(Parser, Debug)]
-pub struct CreateRequestInput {
-    
-    /// Specify the credential name to use, ex: RNS_CREDENTIAL
-    #[clap(long, default_value = CREDENTIAL_NAME )]
-    credential_name: String,
-
-    /// Specify the schema name to use, ex: jurisdiction
-    #[clap(long, default_value = SCHEMA_NAME )]
-    schema_name: String,
-    
-    /// Specify the recipient to use, ex: A6WcyjnyU4nBD66tKxzg35bYCkeNqF4MCtQr7pwreVAv
-    #[clap(long)]
-    recipient: String,
-
     #[clap(long)]
     attestation_data: Vec<u8>,
 
@@ -290,7 +229,7 @@ pub struct QueryArgs {
     credential_name: String,
 
     /// Specify the schema name to use, ex: jurisdiction
-    #[clap(long, default_value = SCHEMA_NAME )]
+    #[clap(long, default_value = "jurisdiction" )]
     schema_name: String,
 
     /// Specify the query type to use, ex: attestation, schema, credential
@@ -304,7 +243,6 @@ pub enum Commands {
     CreateCredential(CreateCredentialArgs),
     CreateSchema(CreateSchemaArgs),
     CreateAttestation(CreateAttestationArgs),
-    CreateRequest(CreateRequestArgs),
     Query(QueryArgs),
 }
 
@@ -325,6 +263,7 @@ async fn main() -> Result<()> {
                 schema_type: sub_args.schema_type.clone(),
                 schema_name: sub_args.schema_name.clone(),
                 description: sub_args.description.clone(),
+                // description: sub_args.description.clone(),
             };
 
             let _ = process_create_schema(&args, &new_args);
@@ -350,7 +289,7 @@ async fn main() -> Result<()> {
                 },
                 SchemaType::Jurisdiction => {
                     let data = Jurisdiction {
-                        jurisdiction: "china".to_string(),
+                        jurisdiction: "1".to_string(),
                     };
                     data.serialize(&mut attestation_data).expect("序列化失败");
                 },
@@ -367,7 +306,6 @@ async fn main() -> Result<()> {
                     data.serialize(&mut attestation_data).expect("序列化失败");
                 }
             }
-
             let new_args = CreateAttestationInput {
                 credential_name: sub_args.credential_name.clone(),
                 schema_name: sub_args.schema_name.clone(),
@@ -377,60 +315,10 @@ async fn main() -> Result<()> {
 
             let _ = process_create_attestation(&args, &new_args);
         }
-        Commands::CreateRequest(sub_args) => {
-            
-            let recipient = sub_args.recipient.clone(); 
-            
-            let mut attestation_data = Vec::new();
-
-            let schema_type = &sub_args.schema_type;
-            match schema_type {
-                SchemaType::AgeOver18 => {
-                    let data = AgeOver18 {
-                        age_over18: true
-                    };
-                    data.serialize(&mut attestation_data).expect("序列化失败");
-                },
-                SchemaType::AgeOver21 => {
-                    let data = AgeOver21 {
-                        age_over21: true
-                    };
-                    data.serialize(&mut attestation_data).expect("序列化失败");
-                },
-                SchemaType::Jurisdiction => {
-                    let data = Jurisdiction {
-                        jurisdiction: "china".to_string(),
-                    };
-                    data.serialize(&mut attestation_data).expect("序列化失败");
-                },
-                SchemaType::Gender => {
-                    let data = Gender {
-                        gender: true
-                    };
-                    data.serialize(&mut attestation_data).expect("序列化失败");
-                },
-                SchemaType::BirthYear => {
-                    let data = BirthYear{
-                        birth_year: 2000
-                    };
-                    data.serialize(&mut attestation_data).expect("序列化失败");
-                }
-            }
-            
-            let sub_input = CreateRequestInput {
-                credential_name: sub_args.credential_name.clone(),
-                schema_name: sub_args.schema_name.clone(),
-                attestation_data: attestation_data.clone(),
-                recipient: recipient
-            };
-
-            let _ = process_create_request(&args, &sub_input);
-        }
-        
+ 
         Commands::Query(sub_args) => {
             let _ = process_query(&args, sub_args);
         }
-        
     }
 
     Ok(())
