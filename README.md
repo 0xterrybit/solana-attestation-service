@@ -44,6 +44,8 @@ Run client generation script
 pnpm run generate-clients
 ```
 
+```
+
 sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.13/install)"
 
 cargo run --bin cli create-attestation --schema-type gender --recipient 
@@ -83,3 +85,5 @@ cargo run --bin cli create-attestation \
         --recipient 
 
 4Lfs7Z9QEc1cy49T7o2jZLFM4ni8BrZVZQoE9UWDofJJzS3n17z4ujkDvXiE5QC1riGH4JivV5XRSr3Z3ndgpZ9w
+
+```
