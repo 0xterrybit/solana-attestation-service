@@ -18,7 +18,7 @@ mod helpers;
 #[derive(BorshSerialize, SchemaStructSerialize)]
 struct TestData {
     name: String,
-    location: u8,
+    // location: u8,
 }
 
 struct TestFixtures {
@@ -55,7 +55,8 @@ async fn setup() -> TestFixtures {
     let schema_name = "test_data";
     let description = "schema for test data";
     let schema_data = TestData::get_serialized_representation();
-    let field_names = vec!["name".into(), "location".into()];
+    // let field_names = vec!["name".into(), "location".into()];
+    let field_names = vec!["name".into()];
     let (schema_pda, _bump) = Pubkey::find_program_address(
         &[
             b"schema",
@@ -107,10 +108,10 @@ async fn create_attestation_success() {
     // Create Attestation
     let attestation_data = TestData {
         name: "attest".to_string(),
-        location: 11,
+        // location: 11,
     };
     let clock: Clock = ctx.banks_client.get_sysvar().await.unwrap();
-    let expiry: i64 = clock.unix_timestamp + 60;
+    let expiry: i64 = clock.unix_timestamp + 36000;
     let mut serialized_attestation_data = Vec::new();
     attestation_data
         .serialize(&mut serialized_attestation_data)
@@ -177,7 +178,7 @@ async fn create_attestation_fail_bad_data() {
     // Create Attestation
     let attestation_data = TestData {
         name: "attest".to_string(),
-        location: 11,
+        // location: 11,
     };
     let expiry: i64 = 1000;
     let mut serialized_attestation_data = Vec::new();
@@ -256,7 +257,7 @@ async fn create_attestation_fail_schema_paused() {
     // Create Attestation
     let attestation_data = TestData {
         name: "attest".to_string(),
-        location: 11,
+        // location: 11,
     };
     let expiry: i64 = 1000;
     let mut serialized_attestation_data = Vec::new();

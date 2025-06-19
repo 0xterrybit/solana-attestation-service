@@ -6,6 +6,7 @@ members = [
   "core",
   "clients/rust",
   "integration_tests",
+   "cli"
 ]
 
 resolver = "2"
@@ -37,3 +38,7 @@ spl-token-metadata-interface = "0.7.0"
 syn = "2.0.72"
 tokio = "1.43.0"
 bs58 = "0.4"
+
+
+solana-client = "2.1.13"
+# solana-sdk = "2.1.13"
